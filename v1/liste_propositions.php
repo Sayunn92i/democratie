@@ -12,7 +12,14 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 $username = $_SESSION["username"];
 $sql = "SELECT id_uti FROM t_utilisateur_uti WHERE nom_uti = '$username'";
 $result = $conn->query($sql);
+?>
 
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<?php
 if ($result->num_rows == 1) {
     $row = $result->fetch_assoc();
     $id_utilisateur = $row["id_uti"];
@@ -32,10 +39,42 @@ if ($result->num_rows == 1) {
             
             // Ajouter des boutons "Modifier" et "Supprimer" pour les propositions de l'utilisateur
             if ($row_proposition["id_appartient"] == $id_utilisateur) {
-                echo "<a href='modifier_proposition.php?id_pro=" . $row_proposition["id_pro"] . "'> Modifier </a>";
-                echo "<a href='supprimer_proposition.php?id_pro=" . $row_proposition["id_pro"] . "'> Supprimer </a>";
+                
+                echo "<form action='modifier_proposition.php' method='get'>";
+                echo "<input type='hidden' name='id_pro' value='" . $row_proposition["id_pro"] . "'>";
+                echo "<button type='submit'>Modifier</button>";
+                echo "</form>";
+                echo "<form action='supprimer_proposition.php' method='get'>";
+                echo "<input type='hidden' name='id_pro' value='" . $row_proposition["id_pro"] . "'>";
+                echo "<button type='submit'>Supprimer</button>";
+                echo "</form>";
+                
+    
+                echo "<br>";
             }
-            
+
+            // Récupérer les commentaires pour cette proposition
+            $id_proposition = $row_proposition["id_pro"];
+            $sql_commentaires = "SELECT * FROM t_commentaire_com WHERE id_pro = $id_proposition";
+            $result_commentaires = $conn->query($sql_commentaires);
+
+            // Afficher les commentaires
+            if ($result_commentaires->num_rows > 0) {
+                echo "<h2>Commentaires :</h2>";
+                while ($row_commentaire = $result_commentaires->fetch_assoc()) {
+                    echo "Contenu du commentaire: " . $row_commentaire["contenu_com"]. " - Date de création: " . $row_commentaire["datecrea_com"];
+                    echo "<br>";
+                }
+            } else {
+                echo "Aucun commentaire pour cette proposition";
+            }
+
+            // Formulaire d'ajout de commentaire
+            echo "<form>";
+            echo "<input type='text' name='contenu_com' required>";
+            echo "<button type='submit'>Ajouter un commentaire</button>";
+            echo "</form>";
+
             echo "<br>";
         }
     } else {
@@ -47,3 +86,5 @@ if ($result->num_rows == 1) {
 
 $conn->close();
 ?>
+</body>
+</html>

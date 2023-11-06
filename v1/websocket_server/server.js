@@ -21,28 +21,9 @@ wss.on('connection', (ws) => {
     });
 });
 
-// suivre l'état de verrouillage des propositions
 
 
-wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        const data = JSON.parse(message);
-        
-        if (data.type === 'lock') {
-            lockedProposals.add(data.proposalId);
-        } else if (data.type === 'unlock') {
-            lockedProposals.delete(data.proposalId);
-        }
-        
-        // Diffusez les informations de verrouillage aux autres clients
-        wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    });
+server.listen(3000, () => {
+    console.log('Serveur en cours d\'exécution sur http://localhost:3000');
 });
-
-
-server.listen(3000);
 

@@ -21,7 +21,7 @@ $sql_proposition = "SELECT * FROM t_proposition_pro WHERE id_pro = $id_propositi
 $result_proposition = $conn->query($sql_proposition);
 
 if ($result_proposition->num_rows != 1) {
-    header("location: liste_propositions.php"); // Rediriger vers la page d'accueil si la proposition n'existe pas
+    header("location: liste_propositions.php"); 
     exit();
 }
 
@@ -36,6 +36,8 @@ if (isset($_POST["enregistrer"])) {
     // Mettre à jour la proposition dans la base de données
     $update_proposition = "UPDATE t_proposition_pro SET titre_pro = '$nouveau_titre', contenu_pro = '$nouveau_contenu' WHERE id_pro = $id_proposition";
     $conn->query($update_proposition);
+    header("location: liste_propositions.php"); 
+    exit();
 }
 ?>
 
@@ -50,93 +52,39 @@ if (isset($_POST["enregistrer"])) {
     <h1>Bonjour <?php echo $_SESSION["username"]?></h1>
     <h1>Modifier une proposition</h1>
     <form method="POST">
-    <label for="titre">Titre de la proposition:</label>
-    <input type="text" name="titre" id="titre" value="<?php echo $titre; ?>" required><br>
+        <label for="titre">Titre de la proposition:</label>
+        <input type="text" name="titre" id="titre" value="<?php echo $titre; ?>" required><br>
 
-    <label for="contenu">Contenu de la proposition:</label>
-    <div id="editor" style="height: 300px;"><?php echo $contenu; ?></div>
-
-    <input type="hidden" name="contenu" id="contenu">
-    <button type="submit" name="enregistrer" id="enregistrer">Enregistrer les changements</button>
-</form>
-
-    
-
+        <label for="contenu">Contenu de la proposition:</label>
+        <div id="editor" style="height: 300px;"><?php echo $contenu; ?></div>
+        <input type="hidden" name="contenu" id="contenu">
+        <button type="submit" name="enregistrer" id="enregistrer">Enregistrer les changements</button>
+    </form>
 
     <script>
-        var quill = new Quill('#editor', {
-            theme: 'snow'
-        });
+var toolbarOptions = [
+  ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
 
-        const socket = new WebSocket('ws://localhost:3000');
 
-        //Envoie un message dans la console lorsqu'un utilisateur se connecte
-        socket.addEventListener('open', (event) => {
-        var username = "<?php echo $_SESSION['username']; ?>";
-        console.log("Utilisateur connecté :", username);
-        socket.send(JSON.stringify({ type: 'username', username: username }));
-        });
-        var lastDelta = null;
-
-        // Utilisation d'un MutationObserver pour surveiller les changements dans Quill
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList') {
-            var contenu = quill.root.innerHTML;
-            var titre = document.querySelector('input[name=titre]').value;
-            var data = {
-                id_proposition: <?php echo $id_proposition; ?>,
-                titre: titre,
-                contenu: contenu
-            };
-            socket.send(JSON.stringify(data));
-            document.querySelector('#contenu').value = contenu;
-             }
-            });
-        });
-
-// On observe les changements dans l'élément racine de Quill
-observer.observe(quill.root, { childList: true, subtree: true });
-
-        document.querySelector('form').addEventListener('submit', function(event) {
-        var contenu = quill.root.innerHTML;
-        document.querySelector('#contenu').value = contenu;
-        });
-
-        socket.addEventListener('open', (event) => {
-            console.log('WebSocket connected');
-        });
-
-        socket.addEventListener('message', (event) => {
-    event.data.text().then((message) => {
-        var data = JSON.parse(message);
-        
-        if (data.type === 'username') {
-            console.log("Utilisateur connecté :", data.username);
-        }
-        if (data.titre !== undefined) {
-            document.querySelector('input[name=titre]').value = data.titre;
-        }
-        if (data.contenu !== undefined) {
-            quill.clipboard.dangerouslyPasteHTML(data.contenu, 'silent');
-        }
-        if (lastDelta) {
-            quill.updateContents(lastDelta);
-            lastDelta = null;
-        }
-    });
+  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                                        
+];
+var quill = new Quill('#editor', {
+  modules: {
+    history: {
+      delay: 2000,
+      maxStack: 500,
+      userOnly: true
+    },
+    toolbar: toolbarOptions
+  },
+  theme: 'snow'
 });
 
-        // Surveiller les changements dans le titre
-        document.querySelector('input[name=titre]').addEventListener('input', function() {
 
-            var titre = document.querySelector('input[name=titre]');
-            var data = {
-                id_proposition: <?php echo $id_proposition; ?>,
-                titre: titre.value,
-                
-            };
-            socket.send(JSON.stringify(data));
+        document.querySelector('form').addEventListener('submit', function(event) {
+            var contenu = quill.root.innerHTML;
+            document.querySelector('#contenu').value = contenu;
         });
     </script>
 </body>
