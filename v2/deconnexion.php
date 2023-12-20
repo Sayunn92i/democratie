@@ -1,15 +1,19 @@
 <?php
+// Démarre la session
 session_start();
 
-// Vérification du token
-if ($_SERVER["REQUEST_METHOD"] == "POST" && hash_equals($_SESSION["token"], $_POST["token"])) {
-    // Destruction de la session
-    session_destroy();
-    // Redirection vers la page de connexion
-    header("location: connexion.php");
-    exit;
-} else {
-    // En cas de token invalide, vous pouvez gérer l'erreur ici
-    echo "Erreur de déconnexion.";
+// Supprime toutes les variables de session
+$_SESSION = array();
+
+// Détruit la session
+session_destroy();
+
+// Supprime le cookie d'ID utilisateur
+if (isset($_COOKIE['user_id'])) {
+    setcookie('user_id', '', time() - 3600, '/');
 }
+
+// Redirige vers la page de connexion
+header('location: connexion.php');
+exit();
 ?>

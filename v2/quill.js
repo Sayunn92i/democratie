@@ -141,3 +141,15 @@ versions.forEach(function (version) {
     console.log("Version du", date, "par", user);
   });
 });
+
+const socket = io('http://localhost:3001'); // Assurez-vous que l'URL correspond à votre serveur socket.io
+
+    socket.on('connect', () => {
+        console.log(username + ' connected to server');
+        // Vous pouvez ajouter des actions supplémentaires à effectuer lors de la connexion au serveur
+    });
+
+    socket.on('disconnect', () => {
+        console.log(username + 'Disconnected from server');
+        // Actions à effectuer en cas de déconnexion du serveur
+    });

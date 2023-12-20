@@ -1,6 +1,11 @@
 <?php
 session_start();
-include('base.php');
+include('base.php');  
+if (isset($_SESSION['pseudo']))  
+{  
+exit("Quelqu’un est déjà connecté via cet ordinateur, si n’est pas vous, veuillez lui deconnecter  
+ pour vous connecter");  
+}    
  
 // Vérifier si le formulaire a été soumis
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
