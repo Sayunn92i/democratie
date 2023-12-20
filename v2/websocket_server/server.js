@@ -6,7 +6,6 @@ const io = require('socket.io')(3001, {
 })
 // Liste des espaces de discussion par proposition
 let propositionSpaces = {};
-let connectedUsers = []; // Tableau pour stocker les pseudos des utilisateurs connectés
 io.on("connection", socket => {
 
   socket.on("user-connected", (username, propositionId) => {
@@ -18,7 +17,7 @@ io.on("connection", socket => {
       socket.username = username;
       socket.propositionId = propositionId;
       propositionSpaces[propositionId].push(username);
-      
+
 
       console.log(username + " s'est connecté(e) à la proposition " + propositionId);
       // Émettre à tous les utilisateurs de la même proposition
@@ -28,28 +27,6 @@ io.on("connection", socket => {
       io.in(propositionId).emit("user-list", propositionSpaces[propositionId]);
     }
   });
-  /*
-  socket.on("user-connected", username => {
-    if (!connectedUsers.includes(username)) {
-      socket.username = username;
-      connectedUsers.push(username); // Ajouter l'utilisateur à la liste des connectés
-
-      console.log(username + " s'est connecté(e)");
-      // Ajouter l'utilisateur à la liste des connectés
-      io.emit("user-connected", username); // Émettre à tous les utilisateurs le pseudo de l'utilisateur connecté
-    }
-    io.emit("user-list", connectedUsers); // Émettre la liste des utilisateurs connectés à tous les utilisateurs
-
-  });
-
-  socket.on("disconnect",() => {
-    console.log(socket.username + " Client disconnected");
-    if (socket.username) {
-      connectedUsers = connectedUsers.filter(user => user !== socket.username);
-      io.emit("user-list", connectedUsers);
-      io.emit("user-disconnected", socket.username);
-    }
-  });*/
   socket.on("disconnect", () => {
     if (socket.username && socket.propositionId && propositionSpaces[socket.propositionId]) {
       console.log(socket.username + " s'est déconnecté(e) de la proposition " + socket.propositionId);
@@ -66,6 +43,19 @@ io.on("connection", socket => {
 
   socket.on("join-proposition", propositionId => {
     socket.join(propositionId); // Joindre la salle spécifique à la proposition
+  });
+
+  socket.on('block-editor', function (propositionId) {
+    console.log("Blockage de l'éditeur");
+    // Envoyez un signal de blocage d'édition à tous les clients connectés à cette proposition
+    io.to(propositionId).emit('editor-blocked'); // Utilisez io pour émettre à tous les clients, ou spécifiez le groupe concerné
+  });
+
+  // Lorsque vous recevez une demande pour débloquer l'édition
+  socket.on('unblock-editor', function (propositionId) {
+    console.log("Délockage de l'éditeur");
+    // Envoyez un signal de déblocage d'édition à tous les clients connectés à cette proposition
+    io.to(propositionId).emit('editor-unblocked'); // Utilisez io pour émettre à tous les clients, ou spécifiez le groupe concerné
   });
 });
 

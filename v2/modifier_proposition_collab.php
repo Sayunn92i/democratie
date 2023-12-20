@@ -128,6 +128,15 @@ observer.observe(quill.root, { childList: true, subtree: true });
         }
     });
 });
+/*
+        window.addEventListener("beforeunload", function (e) {
+         // Envoyer une requête AJAX pour déverrouiller la proposition si elle est verrouillée
+         var xhr = new XMLHttpRequest();
+         var idProposition = "<?php echo $id_proposition; ?>";
+        xhr.open("GET", "deverrouiller_modification.php?id_pro=" + idProposition, true);
+        xhr.send();
+         });  
+          */
 
         // Surveiller les changements dans le titre
         document.querySelector('input[name=titre]').addEventListener('input', function() {

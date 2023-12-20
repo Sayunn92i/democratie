@@ -50,7 +50,6 @@ $row_proposition = $result_proposition->fetch_assoc();
 $titre = $row_proposition["titre_pro"];
 $contenu = $row_proposition["contenu_pro"];
 
-
 if (isset($_POST["enregistrer"])) {
 
     $nouveau_titre = $_POST["titre"];
@@ -105,6 +104,8 @@ if (isset($_POST["enregistrer"])) {
 }
 
 
+
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -123,6 +124,24 @@ if (isset($_POST["enregistrer"])) {
         <?php echo $_SESSION["username"] ?>
     </h1>
     <h1>Modifier une proposition</h1>
+    <?php
+    // Récupérer l'ID de l'administrateur du groupe associé à cette proposition
+    $sql_admin_group = "SELECT admin FROM t_groupe_grp WHERE id_grp = (SELECT id_grp FROM t_proposition_pro WHERE id_pro = $id_proposition)";
+    $result_admin_group = $conn->query($sql_admin_group);
+
+    if ($result_admin_group->num_rows == 1) {
+        $row_admin_group = $result_admin_group->fetch_assoc();
+        $group_admin_id = $row_admin_group['admin'];
+
+        // Vérifier si l'utilisateur actuel est l'administrateur du groupe
+        if ($_SESSION['username'] == $group_admin_id) {
+            // Afficher le bouton de blocage de l'éditeur Quill uniquement pour l'administrateur du groupe
+            echo '<input type="checkbox" id="block-editor" name="block-editor">
+            <label for="block-editor">Bloquer l\'édition pour les autres utilisateurs</label>';
+        }
+    }
+
+    ?>
     <h3>Utilisateurs connectés :</h3>
     <ul id="connectedUsers"></ul>
     <form method="POST">
@@ -199,76 +218,59 @@ if (isset($_POST["enregistrer"])) {
 
 
     <script>
-         //On stock les données de l'utilisateur pour l'utiliser dans quill.js
-/*
-        window.addEventListener("beforeunload", function (e) {
-         // Envoyer une requête AJAX pour déverrouiller la proposition si elle est verrouillée
-         var xhr = new XMLHttpRequest();
-         var idProposition = "<?php echo $id_proposition; ?>";
-        xhr.open("GET", "deverrouiller_modification.php?id_pro=" + idProposition, true);
-        xhr.send();
-         });  
-          **/
-
         //Creation de la socket 
-        var propositionId= "<?php echo $id_proposition; ?>";
+        var propositionId = "<?php echo $id_proposition; ?>";
         var username = "<?php echo $_SESSION['username']; ?>";
-        const socket = io('http://localhost:3001'); // Assurez-vous que l'URL correspond à votre serveur socket.io
+        var admin = "<?php echo $group_admin_id; ?>";
+        const socket = io('http://localhost:3001');
 
+        //Lors de la connection, on envoit le pseudo de l'utilisateur au serveur et la proposition qui lui appartient
         socket.on('connect', () => {
-            //on envoit le pseudo de l'utilisateur au serveur
-            
             socket.emit("join-proposition", propositionId);
-            socket.emit("user-connected", username,propositionId);
+            socket.emit("user-connected", username, propositionId);
         });
 
+        //Affichage à tous les utilisateurs de la connexion d'un utilisateur
         socket.on("user-connected", username => {
-            console.log(username + " s'est connecté(e)"); // Gérer l'affichage côté client
+            console.log(username + " s'est connecté(e)");
         });
 
+        //Affichage à tous les utilisateurs de la déconnexion d'un utilisateur
         socket.on("user-disconnected", username => {
-            console.log(username + " s'est déconnecté(e)"); // Gérer l'affichage côté client
+            console.log(username + " s'est déconnecté(e)");
         });
-
-
+        //Affichage de la liste de tous les utilisateurs connectés
         socket.on("user-list", userList => {
             console.log("Utilisateurs connectés :", userList);
-            // Sélectionnez l'élément où vous souhaitez afficher la liste des utilisateurs connectés
             var connectedUsersList = document.getElementById("connectedUsers");
-
-            // Effacez le contenu actuel de la liste des utilisateurs connectés
             connectedUsersList.innerHTML = "";
-
             // Parcourez la liste des utilisateurs et mettez à jour l'affichage
             userList.forEach(user => {
                 var listItem = document.createElement("li");
-                listItem.textContent = user; // Ajoutez l'utilisateur à la liste
-
-                connectedUsersList.appendChild(listItem); // Ajoutez l'élément à la liste des utilisateurs connectés
+                listItem.textContent = user;
+                connectedUsersList.appendChild(listItem);
             });
         });
 
-        //Editeur quill
+        //Ajout de l'editeur quill
         var quill;
-        var metaData = [];
-        var contenuProposition;
         var toolbarOptions = [
-            ["bold", "italic", "underline", "strike"], // toggled buttons
-            // ['blockquote'],
+            ["bold", "italic", "underline", "strike"],
             [{ list: "ordered" }, { list: "bullet" }],
-            [{ script: "sub" }, { script: "super" }], // superscript/subscript
-            [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-            [{ direction: "rtl" }], // text direction
+            [{ script: "sub" }, { script: "super" }],
+            [{ indent: "-1" }, { indent: "+1" }],
+            [{ direction: "rtl" }],
 
-            [{ size: ["small", false, "large", "huge"] }], // custom dropdown
+            [{ size: ["small", false, "large", "huge"] }],
             [{ header: [1, 2, 3, 4, 5, 6, false] }],
 
-            [{ color: [] }, { background: [] }], // dropdown with defaults from theme
+            [{ color: [] }, { background: [] }],
             [{ font: [] }],
             [{ align: [] }],
 
-            ["clean"], // remove formatting button
+            ["clean"],
         ];
+
         quill = new Quill("#editor", {
             modules: {
                 history: {
@@ -280,7 +282,8 @@ if (isset($_POST["enregistrer"])) {
             },
             theme: "snow",
         });
-        //envoie des modif en temps réel au serveur
+
+        //Envoie des modification de l'editeur au serveur
         quill.on("text-change", function (delta, oldDelta, source) {
             if (source === "user") {
                 // Envoyer les changements via Socket.io
@@ -288,9 +291,11 @@ if (isset($_POST["enregistrer"])) {
             }
         });
 
+        //Affichage du contenu modifié à tous les utilisateurs
         socket.on("content-changed", function (contents) {
             quill.setContents(contents);
         });
+
         document.querySelector("form").addEventListener("submit", function (event) {
             var contenu = quill.root.innerHTML;
             /* var contenu = quill.getContents();
@@ -299,6 +304,38 @@ if (isset($_POST["enregistrer"])) {
             var commentairesJSON = JSON.stringify(metaData);
             document.querySelector("#comments-container").value = commentairesJSON;
             document.querySelector("#contenu").value = contenu;
+        });
+
+        //Gestion de la checkbox pour bloquer l'edition des utilisateurs
+        if (username == admin) {
+            document.querySelector('#block-editor').addEventListener('change', function () {
+                if (this.checked) {
+                    console.log("Blockage de l'editeur par "+ username +" pour tous les utilisateurs");
+                    // Envoyer une demande au serveur pour bloquer l'édition
+                    socket.emit('block-editor',propositionId);
+                } else {
+                    console.log("Déblockage de l'editeur par "+ username +" pour tous les utilisateurs");
+                    // Envoyer une demande au serveur pour débloquer l'édition
+                    socket.emit('unblock-editor',propositionId);
+                }
+            });
+        }
+
+        // Gérer la réponse du serveur pour bloquer l'édition côté client
+        socket.on('editor-blocked', function () {
+            // Empêcher l'utilisateur actuel d'éditer le contenu
+            if (username != admin) {
+                console.log("Blockage de l'editeur par "+ admin);
+                quill.disable();
+            }
+
+        });
+
+        // Gérer la réponse du serveur pour débloquer l'édition côté client
+        socket.on('editor-unblocked', function () {
+            console.log("Déblockage de l'editeur par "+ admin);
+            // Autoriser l'utilisateur actuel à éditer le contenu
+            quill.enable();
         });
 
         // Récupère tous les éléments de la classe version-item
@@ -320,10 +357,6 @@ if (isset($_POST["enregistrer"])) {
                 console.log("Version du", date, "par", user);
             });
         });
-
-
-
-
 
     </script>
 </body>
