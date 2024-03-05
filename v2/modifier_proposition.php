@@ -100,12 +100,7 @@ if (isset($_POST["enregistrer"])) {
 
     header("location: liste_propositions.php");
     exit();
-
 }
-
-
-
-
 ?>
 <!DOCTYPE html>
 <html>
@@ -124,6 +119,7 @@ if (isset($_POST["enregistrer"])) {
         <?php echo $_SESSION["username"] ?>
     </h1>
     <h1>Modifier une proposition</h1>
+
     <?php
     // Récupérer l'ID de l'administrateur du groupe associé à cette proposition
     $sql_admin_group = "SELECT admin FROM t_groupe_grp WHERE id_grp = (SELECT id_grp FROM t_proposition_pro WHERE id_pro = $id_proposition)";
@@ -155,6 +151,7 @@ if (isset($_POST["enregistrer"])) {
         <div id="editor">
             <?php echo $contenu ?>
         </div>
+        <input type="hidden" name="contenu" id="contenu">
         Comments
         <ul class="list-group" id="comments-container">
             <?php
@@ -181,7 +178,6 @@ if (isset($_POST["enregistrer"])) {
             }
             ?>
         </ul>
-        <input type="hidden" name="contenu" id="contenu">
         <button type="submit" name="enregistrer" id="enregistrer">Enregistrer les changements</button>
         <h2>Versions précédentes</h2>
         <ul id="versions-container">
@@ -254,6 +250,7 @@ if (isset($_POST["enregistrer"])) {
 
         //Ajout de l'editeur quill
         var quill;
+        var metaData = [];
         var toolbarOptions = [
             ["bold", "italic", "underline", "strike"],
             [{ list: "ordered" }, { list: "bullet" }],
@@ -274,11 +271,12 @@ if (isset($_POST["enregistrer"])) {
         quill = new Quill("#editor", {
             modules: {
                 history: {
-                    delay: 2000,
+                    delay: 500,
                     maxStack: 500,
                     userOnly: true,
                 },
                 toolbar: toolbarOptions,
+
             },
             theme: "snow",
         });
@@ -300,9 +298,9 @@ if (isset($_POST["enregistrer"])) {
             var contenu = quill.root.innerHTML;
             /* var contenu = quill.getContents();
              var contenuJSON = JSON.stringify(contenu);*/
-
-            var commentairesJSON = JSON.stringify(metaData);
-            document.querySelector("#comments-container").value = commentairesJSON;
+            console.log(contenu);
+            /* var commentairesJSON = JSON.stringify(metaData);
+             document.querySelector("#comments-container").value = commentairesJSON;*/
             document.querySelector("#contenu").value = contenu;
         });
 
@@ -310,13 +308,14 @@ if (isset($_POST["enregistrer"])) {
         if (username == admin) {
             document.querySelector('#block-editor').addEventListener('change', function () {
                 if (this.checked) {
-                    console.log("Blockage de l'editeur par "+ username +" pour tous les utilisateurs");
+                    console.log("Blockage de l'editeur par " + username + " pour tous les utilisateurs");
                     // Envoyer une demande au serveur pour bloquer l'édition
-                    socket.emit('block-editor',propositionId);
+                    socket.emit('block-editor', propositionId);
                 } else {
-                    console.log("Déblockage de l'editeur par "+ username +" pour tous les utilisateurs");
+                    console.log("Déblockage de l'editeur par " + username + " pour tous les utilisateurs");
                     // Envoyer une demande au serveur pour débloquer l'édition
-                    socket.emit('unblock-editor',propositionId);
+                    socket.emit('unblock-editor', propositionId);
+
                 }
             });
         }
@@ -325,7 +324,7 @@ if (isset($_POST["enregistrer"])) {
         socket.on('editor-blocked', function () {
             // Empêcher l'utilisateur actuel d'éditer le contenu
             if (username != admin) {
-                console.log("Blockage de l'editeur par "+ admin);
+                console.log("Blockage de l'editeur par " + admin);
                 quill.disable();
             }
 
@@ -333,10 +332,13 @@ if (isset($_POST["enregistrer"])) {
 
         // Gérer la réponse du serveur pour débloquer l'édition côté client
         socket.on('editor-unblocked', function () {
-            console.log("Déblockage de l'editeur par "+ admin);
+            console.log("Déblockage de l'editeur par " + admin);
             // Autoriser l'utilisateur actuel à éditer le contenu
             quill.enable();
         });
+
+
+
 
         // Récupère tous les éléments de la classe version-item
         var versions = document.querySelectorAll(".version-item");
@@ -356,6 +358,63 @@ if (isset($_POST["enregistrer"])) {
 
                 console.log("Version du", date, "par", user);
             });
+        });
+
+        /*Commentaires */
+        function sendMetaData(metaData) {
+            socket.emit("metadata-changed", metaData);
+        }
+        socket.on("metadata-changed", function (metaData) {
+            drawComments(metaData);
+        });
+
+        $(document).on("click", "#comment-button", function () {
+            var prompt = window.prompt("Insérer un commentaire", "");
+            var txt;
+            if (prompt == null || prompt == "") {
+                txt = "User cancelled the prompt.";
+            } else {
+                var range = quill.getSelection();
+                if (range) {
+                    if (range.length == 0) {
+                        alert("Selectionner le texte à commenter", range.index);
+                    } else {
+                        var text = quill.getText(range.index, range.length);
+                        console.log("l'utilisateur a surligné: ", text);
+                        metaData.push({ range: range, comment: prompt });
+                        quill.formatText(range.index, range.length, {
+                            background: "#fff72b"
+                        });
+                        drawComments(metaData);
+                        sendMetaData(metaData);
+
+                    }
+                } else {
+                    alert("User cursor is not in editor");
+                }
+            }
+        });
+        function drawComments(metaData) {
+            var $commentContainer = $("#comments-container");
+            var content = "";
+            $.each(metaData, function (index, value) {
+                content +=
+                    "<a class='comment-link' href='#' data-index='" +
+                    index +
+                    "'><li class='list-group-item'>" +
+                    value.comment +
+                    "</li></a>";
+            });
+            $commentContainer.html(content);
+        }
+
+
+
+        $(document).on('click', '.comment-link', function () {
+            var index = $(this).data('index');
+            console.log("comment link called", index);
+            var data = metaData[index];
+            quill.setSelection(data.range.index, data.range.length);
         });
 
     </script>

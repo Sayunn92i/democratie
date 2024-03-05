@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase /democratie/v2/
+RewriteBase /democratie/v2_codeingiter/
 
 # Supprime "index.php" des URLs
 RewriteCond %{REQUEST_FILENAME} !-f

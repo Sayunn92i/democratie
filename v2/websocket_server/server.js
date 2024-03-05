@@ -46,17 +46,24 @@ io.on("connection", socket => {
   });
 
   socket.on('block-editor', function (propositionId) {
-    console.log("Blockage de l'éditeur");
+    console.log("Blockage de l'éditeur de la proposition "+ propositionId);
     // Envoyez un signal de blocage d'édition à tous les clients connectés à cette proposition
     io.to(propositionId).emit('editor-blocked'); // Utilisez io pour émettre à tous les clients, ou spécifiez le groupe concerné
   });
 
   // Lorsque vous recevez une demande pour débloquer l'édition
   socket.on('unblock-editor', function (propositionId) {
-    console.log("Délockage de l'éditeur");
+    console.log("Délockage de l'éditeur de la proposition "+ propositionId);
     // Envoyez un signal de déblocage d'édition à tous les clients connectés à cette proposition
     io.to(propositionId).emit('editor-unblocked'); // Utilisez io pour émettre à tous les clients, ou spécifiez le groupe concerné
   });
+
+  // Lorsqu'un commentaire est ajouté dans la fonction associée
+  socket.on("metadata-changed", function(updatedMetaData) {
+    metaData = updatedMetaData;
+    // Mettre à jour l'affichage des commentaires côté client
+    io.to(socket.propositionId).emit("metadata-changed", metaData);
+});
 });
 
 

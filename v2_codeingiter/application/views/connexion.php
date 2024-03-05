@@ -6,11 +6,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page de connexion -->
     <title>Connexion</title>
     <link rel="stylesheet" href="<?php echo base_url('assets/css/styles.css'); ?>">
 </head>
 <body>
-    <?php $this->load->view('header_frontend'); ?>
+<?php $this->load->view('header_frontend'); ?>   
     <div class="container">
         <h2>Connexion</h2>
         <!-- Zone pour afficher les erreurs -->
@@ -23,7 +24,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 else echo "<div class='error'>Erreur de connection à la base !</div>";
             }
         ?>
-        <form action="<?php echo site_url('connexion_submit'); ?>" method="post">
+        <!-- Formulaire de connexion -->
+        <form action="<?php echo base_url('connexion/connexion_submit'); ?>" method="post">
             <label for="username">Nom d'utilisateur</label>
             <input type="text" id="username" name="username" required><br>
             <label for="password">Mot de passe</label>

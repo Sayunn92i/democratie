@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
 | -------------------------------------------------------------------------
@@ -52,3 +52,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['default_controller'] = 'accueil';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+$route['connexion'] = 'Connexion'; // Redirige /connexion vers le contrôleur Connexion
+$route['espace_prive'] = 'EspacePrive'; // Redirige /espace_prive vers le contrôleur EspacePrive
+$route['espace_prive/deconnexion'] = 'EspacePrive/deconnexion';
+$route['espace_prive/liste_propositions'] = 'EspacePrive/liste_propositions';
+$route['espace_prive/delete_proposition/(:num)'] = 'EspacePrive/delete_proposition/$1';
+$route['espace_prive/modifier_proposition/(:num)'] = 'EspacePrive/modifier_proposition/$1';
+
+$route['connexion_submit'] = 'Connexion/connexion_submit';
+$route['inscription_submit'] = 'Inscription/inscription_submit';
