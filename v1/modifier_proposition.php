@@ -40,52 +40,54 @@ if (isset($_POST["enregistrer"])) {
     exit();
 }
 ?>
-
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Modifier une proposition</title>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-</head>
-<body>
-    <h1>Bonjour <?php echo $_SESSION["username"]?></h1>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <h1>Bonjour <?php echo $_SESSION["username"]?> </h1>
     <h1>Modifier une proposition</h1>
     <form method="POST">
-        <label for="titre">Titre de la proposition:</label>
-        <input type="text" name="titre" id="titre" value="<?php echo $titre; ?>" required><br>
+      <label for="titre">Titre de la proposition:</label>
+      <input type="text" name="titre" id="titre" value="<?php echo $titre; ?>" required>
+      <br>
+      
+      <label for="contenu">Contenu de la proposition:</label>
+        <button type="button" id="comment-button" style="color:red">Comment</button>
+        <div id="editor"> <?php echo $contenu; ?> </div>
 
-        <label for="contenu">Contenu de la proposition:</label>
-        <div id="editor" style="height: 300px;"><?php echo $contenu; ?></div>
-        <input type="hidden" name="contenu" id="contenu">
-        <button type="submit" name="enregistrer" id="enregistrer">Enregistrer les changements</button>
+    Comments
+    <ul class="list-group" id="comments-container">
+    </ul>
+       
+      
+      <input type="hidden" name="contenu" id="contenu">
+      <button type="submit" name="enregistrer" id="enregistrer">Enregistrer les changements</button>
     </form>
-
+    <script src="quill.js"></script>
+    
     <script>
-var toolbarOptions = [
-  ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-
-
-  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-                                        
-];
-var quill = new Quill('#editor', {
-  modules: {
-    history: {
-      delay: 2000,
-      maxStack: 500,
-      userOnly: true
-    },
-    toolbar: toolbarOptions
-  },
-  theme: 'snow'
-});
-
-
-        document.querySelector('form').addEventListener('submit', function(event) {
-            var contenu = quill.root.innerHTML;
-            document.querySelector('#contenu').value = contenu;
-        });
+    
+      /*
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],       
+        [{ 'size': ['small', false, 'large', 'huge'] }],  
+        ];
+        var quill = new Quill('#editor', {
+        modules: {
+            history: {
+                delay: 2000,
+                maxStack: 500,
+                userOnly: true
+            },
+        toolbar: toolbarOptions
+        },
+        theme: 'snow'
+        });*/
     </script>
-</body>
+  </body>
 </html>
