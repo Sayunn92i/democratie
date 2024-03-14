@@ -43,3 +43,6 @@ Test de l'installation :
 
 Ouvrez votre navigateur Web et accédez à l'adresse http://localhost/votredossierdemocratie (remplacez "votredossierdemocratie" par le nom du dossier que vous avez créé pour votre projet).
 Si tout est configuré correctement, vous devriez voir la page d'accueil de votre site de démocratie.
+
+L'identifiant et le mot de passe des utilisateurs test sont :
+JohnDoe mdp: hashedPassword1 , JaneDoe mdp:hashedPassword2
