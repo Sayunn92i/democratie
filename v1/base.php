@@ -1,8 +1,8 @@
 <?php
-// Connexion à la base de données
-$dbhost = "localhost";
-$dbuser = "clementf";
-$dbpass = "2II8ZgcZoYt6M4Cx";
+// Connexion à la base de données à modifier
+$dbhost = "";
+$dbuser = "";
+$dbpass = "";
 $dbname = "democratie_v1";
 
 $conn = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
